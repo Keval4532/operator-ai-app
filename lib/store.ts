@@ -408,14 +408,16 @@ class Store {
   }
 
   // Abandoned Checkout Single Test Send
-  public sendSingleRecoveryMessage(checkoutId: string, testPhone: string) {
+  public sendSingleRecoveryMessage(checkoutId: string, testPhone?: string) {
     const chk = this.abandonedCheckouts.find((c) => c.id === checkoutId);
     if (!chk) return null;
+
+    const phone = testPhone || chk.customerPhone;
 
     const log: MessageDeliveryLog = {
       id: `dlog_${Date.now()}`,
       checkoutId,
-      recipientPhone: testPhone,
+      recipientPhone: phone,
       channel: 'WHATSAPP',
       sentAt: new Date().toISOString(),
       status: 'DELIVERED',
@@ -427,9 +429,9 @@ class Store {
       c.id === checkoutId ? { ...c, status: 'DELIVERED' as const } : c
     );
 
-    this.addAuditLog(`Sent test recovery WhatsApp message to ${testPhone}`, 'USER', {
+    this.addAuditLog(`Sent test recovery WhatsApp message to ${phone}`, 'USER', {
       checkoutId,
-      testPhone,
+      testPhone: phone,
     });
     return log;
   }

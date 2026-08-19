@@ -538,12 +538,13 @@ export default function RulesWorkspacePage() {
                         </td>
                         <td className="py-3.5 px-3 text-right font-mono text-slate-500">{sku.leadTimeDays} days</td>
                         <td className="py-3.5 px-4 text-right">
-                          {sku.riskLevel === 'CRITICAL_STOCKOUT' || sku.riskLevel === 'LOW_STOCK' ? (
+                          {sku.riskLevel === 'CRITICAL_STOCKOUT' || sku.riskLevel === 'LOW_STOCK' || sku.dosr < 10 ? (
                             <button
                               onClick={() => handleOpenPoModal(sku)}
-                              className="rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 text-xs font-bold shadow-xs"
+                              className="rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 text-xs font-bold shadow-xs flex items-center gap-1 ml-auto transition"
                             >
-                              Restock Order
+                              <Zap className="h-3 w-3" />
+                              <span>Generate Supplier PO</span>
                             </button>
                           ) : (
                             <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">Stock Safe</span>
@@ -621,42 +622,80 @@ export default function RulesWorkspacePage() {
         </div>
       )}
 
-      {/* MODAL: RESTOCK PO */}
+      {/* MODAL: SUPPLIER PURCHASE ORDER (PO) GENERATOR */}
       {activePoSku && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs p-4 animate-in fade-in">
-          <div className="w-full max-w-md rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Send Restock Order</h3>
-              <button onClick={() => setActivePoSku(null)} className="text-slate-400">✕</button>
-            </div>
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border space-y-1">
-                <div className="font-bold text-sm text-slate-900 dark:text-white">{activePoSku.title}</div>
-                <div className="text-slate-500">Supplier: {activePoSku.supplierName}</div>
-                <div className="text-slate-500">Lead Time: {activePoSku.leadTimeDays} Days</div>
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 font-bold">
+                  <Package className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Supplier Purchase Order (PO)</h3>
+                  <p className="text-[11px] text-slate-500">Auto-calculated based on {activePoSku.dailyVelocity7d} units/day burn rate</p>
+                </div>
               </div>
+              <button onClick={() => setActivePoSku(null)} className="text-slate-400 hover:text-slate-600">✕</button>
+            </div>
+
+            <div className="space-y-3.5 text-xs">
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                <div className="font-bold text-sm text-slate-900 dark:text-white">{activePoSku.title}</div>
+                <div className="flex justify-between text-slate-600 dark:text-slate-400 text-[11px]">
+                  <span>Supplier: <strong>{activePoSku.supplierName}</strong></span>
+                  <span>GSTIN: <strong>27AABCA1234F1Z9</strong></span>
+                </div>
+                <div className="flex justify-between text-slate-500 text-[11px]">
+                  <span>Lead Time: {activePoSku.leadTimeDays} Business Days</span>
+                  <span>Contact: {activePoSku.supplierEmail}</span>
+                </div>
+              </div>
+
               <div>
-                <label className="block font-semibold mb-1">Units to Order:</label>
+                <label className="block font-semibold mb-1 text-slate-700 dark:text-slate-300">
+                  Recommended Reorder Quantity (Units):
+                </label>
                 <input
                   type="number"
                   value={poUnits}
                   onChange={(e) => setPoUnits(Math.max(10, Number(e.target.value)))}
-                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-2 font-mono"
+                  className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 p-2.5 font-mono text-sm font-bold text-slate-900 dark:text-white"
                 />
               </div>
-              <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-                <span className="text-[11px] text-emerald-800 dark:text-emerald-400">Total Purchase Cost:</span>
-                <div className="text-base font-bold font-mono text-emerald-900 dark:text-emerald-200">
-                  ₹{(poUnits * activePoSku.unitCost).toLocaleString('en-IN')}
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border">
+                  <span className="text-[10px] text-slate-400 block font-semibold">Unit Manufacturing Cost:</span>
+                  <div className="font-mono font-bold text-slate-900 dark:text-white">₹{activePoSku.unitCost} / unit</div>
+                </div>
+                <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                  <span className="text-[10px] text-emerald-800 dark:text-emerald-400 block font-semibold">Total Purchase Cost:</span>
+                  <div className="text-base font-bold font-mono text-emerald-900 dark:text-emerald-200">
+                    ₹{(poUnits * activePoSku.unitCost).toLocaleString('en-IN')}
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+
+            <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
               <button onClick={() => setActivePoSku(null)} className="rounded-lg border px-3 py-1.5 text-xs text-slate-600 dark:text-slate-300">
                 Cancel
               </button>
-              <button onClick={handleConfirmPo} className="rounded-lg bg-emerald-600 text-white px-4 py-1.5 text-xs font-bold flex items-center gap-1">
-                <Send className="h-3.5 w-3.5" /> Send Order Email
+              <button
+                onClick={() => {
+                  handleConfirmPo();
+                  toast.success(`Dispatched PO to ${activePoSku.supplierName} via WhatsApp!`);
+                }}
+                className="rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white px-3.5 py-1.5 text-xs font-bold flex items-center gap-1.5 shadow-xs"
+              >
+                <MessageSquare className="h-3.5 w-3.5" /> Send via Supplier WhatsApp
+              </button>
+              <button
+                onClick={handleConfirmPo}
+                className="rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-1.5 text-xs font-bold flex items-center gap-1.5 shadow-xs"
+              >
+                <Send className="h-3.5 w-3.5" /> Send Supplier Email PO
               </button>
             </div>
           </div>

@@ -433,19 +433,24 @@ export default function GrowthWorkspacePage() {
           </div>
         )}
 
-        {/* TAB 2: CART RECOVERY */}
+        {/* TAB 2: CART RECOVERY WITH TWO-WAY OBJECTION AI */}
         {growthTab === 'CARTS' && (
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Left: Message Customizer */}
-              <div className="lg:col-span-7 space-y-5">
+              {/* Left: Message Customizer & Uncompleted Checkouts Table */}
+              <div className="lg:col-span-7 space-y-6">
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-6 space-y-4 shadow-xs">
                   <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-                    <h2 className="text-base font-bold text-slate-900 dark:text-white">
-                      WhatsApp Recovery Discount & Template
-                    </h2>
-                    <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                      42 Carts Pending (₹88,400)
+                    <div>
+                      <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                        WhatsApp Recovery & Automated Two-Way Objection Handling
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Variables: <code>{'{{first_name}}'}</code>, <code>{'{{cart_items}}'}</code>, <code>{'{{discount_link}}'}</code>
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-rose-100 dark:bg-rose-950 px-2.5 py-0.5 text-xs font-bold text-rose-700 dark:text-rose-300">
+                      42 Carts (₹88,400)
                     </span>
                   </div>
 
@@ -472,7 +477,7 @@ export default function GrowthWorkspacePage() {
 
                   <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
                     <span className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
-                      <Smartphone className="h-4 w-4 text-emerald-500" /> Send Test Message:
+                      <Smartphone className="h-4 w-4 text-emerald-500" /> Send Test WhatsApp:
                     </span>
                     <div className="flex gap-2">
                       <input
@@ -496,35 +501,125 @@ export default function GrowthWorkspacePage() {
                     className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 py-3 text-xs font-bold text-white shadow-md flex items-center justify-center gap-2 transition disabled:opacity-50"
                   >
                     <Zap className={`h-4 w-4 ${isSendingCartBlast ? 'animate-spin' : ''}`} />
-                    <span>{isSendingCartBlast ? 'Dispatching Messages...' : 'Recover All 42 Abandoned Carts Now'}</span>
+                    <span>{isSendingCartBlast ? 'Dispatching Messages...' : 'Recover All 42 Abandoned Carts Now (₹88,400)'}</span>
                   </button>
+                </div>
+
+                {/* Table of Uncompleted Checkouts */}
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 p-5 space-y-3 shadow-xs">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">Recent Abandoned Checkouts</h3>
+                    <span className="text-[11px] text-slate-500">Auto-synced with Shopify</span>
+                  </div>
+
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-semibold text-slate-500">
+                          <th className="py-2.5 px-3">Customer</th>
+                          <th className="py-2.5 px-2">Cart Value</th>
+                          <th className="py-2.5 px-2">Dropped Step</th>
+                          <th className="py-2.5 px-2 text-right">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+                        {checkouts.slice(0, 5).map((chk) => (
+                          <tr
+                            key={chk.id}
+                            onClick={() => setSelectedCheckout(chk)}
+                            className={`cursor-pointer transition ${
+                              selectedCheckout?.id === chk.id
+                                ? 'bg-emerald-50/60 dark:bg-emerald-950/40'
+                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/40'
+                            }`}
+                          >
+                            <td className="py-2.5 px-3">
+                              <div className="font-bold text-slate-900 dark:text-white">{chk.customerName}</div>
+                              <div className="text-[10px] text-slate-500">{chk.customerPhone}</div>
+                            </td>
+                            <td className="py-2.5 px-2 font-mono font-bold">₹{chk.cartTotal.toLocaleString('en-IN')}</td>
+                            <td className="py-2.5 px-2">
+                              <span className="rounded bg-rose-100 dark:bg-rose-950 px-1.5 py-0.5 text-[10px] font-bold text-rose-700 dark:text-rose-400">
+                                {chk.dropoffStep}
+                              </span>
+                            </td>
+                            <td className="py-2.5 px-2 text-right">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  store.sendSingleRecoveryMessage(chk.id);
+                                  refreshData();
+                                  toast.success(`Recovery Voucher Sent to ${chk.customerName}!`);
+                                }}
+                                className="rounded-md bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1 text-[10px] font-bold shadow-2xs"
+                              >
+                                Send Offer
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
 
-              {/* Right: Phone Simulator */}
-              <div className="lg:col-span-5 flex justify-center">
+              {/* Right: Phone Simulator & Two-Way Objection AI Interactive Demo */}
+              <div className="lg:col-span-5 flex flex-col items-center space-y-4">
                 <div className="w-full max-w-sm rounded-[2.5rem] border-4 border-slate-300 dark:border-slate-700 bg-slate-900 p-3 shadow-2xl space-y-3">
                   <div className="mx-auto h-4 w-28 rounded-full bg-slate-800"></div>
-                  <div className="h-[420px] rounded-[2rem] bg-[#0c1317] p-3 text-slate-100 flex flex-col justify-between">
-                    <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+                  <div className="h-[460px] rounded-[2rem] bg-[#0c1317] p-3 text-slate-100 flex flex-col justify-between overflow-y-auto space-y-2">
+                    {/* Header */}
+                    <div className="flex items-center gap-2 border-b border-slate-800 pb-2 shrink-0">
                       <div className="h-7 w-7 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-xs">
                         A
                       </div>
-                      <div className="text-xs font-bold">Aura Skincare Co. ✓</div>
-                    </div>
-
-                    <div className="rounded-xl bg-[#005c4b] p-3 text-xs text-white shadow-md space-y-2">
-                      <div className="font-bold text-[11px] text-emerald-200">✨ Aura Skincare Order Update</div>
-                      <div className="text-[11px] leading-relaxed">
-                        Hey {selectedCheckout?.customerName.split(' ')[0] || 'there'}! 🌿 We saved your bag with {selectedCheckout?.cartItems.map((i) => i.name).join(' & ') || 'items'}. Use code RECOVER{blastDiscountPercent} for {blastDiscountPercent}% off today!
+                      <div>
+                        <div className="text-xs font-bold flex items-center gap-1">
+                          Aura Skincare Co. <span className="text-emerald-400">✓</span>
+                        </div>
+                        <div className="text-[9px] text-slate-400">AI Concierge Online</div>
                       </div>
                     </div>
 
-                    <div className="rounded-full bg-slate-800 px-3 py-1.5 text-[10px] text-slate-400">
-                      Type a reply...
+                    {/* Chat Stream with Two-Way Objection Handling */}
+                    <div className="space-y-2 text-xs flex-1">
+                      {/* Brand Outreach Message */}
+                      <div className="rounded-xl bg-[#005c4b] p-3 text-xs text-white shadow-md space-y-1">
+                        <div className="font-bold text-[10px] text-emerald-200">✨ Aura Skincare Order Update</div>
+                        <div className="text-[11px] leading-relaxed">
+                          Hey {selectedCheckout?.customerName.split(' ')[0] || 'there'}! 🌿 We saved your bag with {selectedCheckout?.cartItems.map((i) => i.name).join(' & ') || 'Radiance Serum'}. Use code <strong>RECOVER{blastDiscountPercent}</strong> for {blastDiscountPercent}% off today!
+                        </div>
+                      </div>
+
+                      {/* Customer Simulated Objection */}
+                      <div className="flex justify-end">
+                        <div className="rounded-xl bg-[#202c33] p-2.5 text-[11px] text-slate-200 max-w-[85%]">
+                          "Is this Vitamin C serum suitable for acne-prone sensitive skin?"
+                        </div>
+                      </div>
+
+                      {/* Autonomous AI Objection Answer */}
+                      <div className="rounded-xl bg-[#005c4b] p-3 text-xs text-white shadow-md space-y-1">
+                        <div className="text-[10px] font-bold text-emerald-200 flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" /> Two-Way Objection AI
+                        </div>
+                        <div className="text-[11px] leading-relaxed">
+                          Yes! Aura's Vitamin C is non-comedogenic and formulated with Niacinamide to soothe breakouts while fading dark spots. 🌿 We also have a 30-day money-back guarantee!
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="rounded-full bg-slate-800 px-3 py-1.5 text-[10px] text-slate-400 shrink-0 flex items-center justify-between">
+                      <span>Type a reply...</span>
+                      <Send className="h-3 w-3 text-emerald-500" />
                     </div>
                   </div>
                 </div>
+                <p className="text-[11px] text-slate-500 text-center max-w-xs">
+                  Automated Two-Way Objection AI answers customer product questions 24/7 on WhatsApp.
+                </p>
               </div>
             </div>
           </div>

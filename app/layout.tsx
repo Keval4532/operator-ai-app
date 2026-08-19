@@ -4,8 +4,8 @@ import { Toaster } from 'sonner';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Operator AI v2.0 | Autonomous E-Commerce Operating System',
-  description: 'AI-driven autonomous operating system for Shopify and multi-channel commerce.',
+  title: 'Operator AI v5.0 | Autonomous E-Commerce Operating System',
+  description: 'The autonomous AI Business Operating System & Revenue Manager for Shopify & D2C brands.',
 };
 
 export default function RootLayout({
@@ -18,7 +18,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#0B0F17] dark:text-slate-100 antialiased selection:bg-emerald-500 selection:text-white transition-colors duration-150">
         <ThemeProvider
           attribute="class"
-          defaultTheme="dark"
+          defaultTheme="light"
           enableSystem
           disableTransitionOnChange={false}
         >

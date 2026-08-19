@@ -37,11 +37,11 @@ export const Header: React.FC<HeaderProps> = ({
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // 4 Consolidated Workspaces for v4.0
+  // 4 Consolidated Workspaces for v5.0
   const navLinks = [
     { href: '/', label: 'Overview', icon: LayoutDashboard },
     { href: '/profit', label: 'Profit & Units', icon: PieChart },
-    { href: '/growth', label: 'Growth & Recovery', icon: TrendingUp },
+    { href: '/growth', label: 'Growth & Ads', icon: TrendingUp },
     { href: '/rules', label: 'Brain & Rules', icon: Brain },
   ];
 
