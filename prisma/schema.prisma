@@ -1,0 +1,179 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  VIEWER
+}
+
+enum IntegrationProvider {
+  SHOPIFY
+  META_ADS
+  GOOGLE_ANALYTICS
+  WHATSAPP_CLOUDFLARE
+  KLAVIYO
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  ERROR
+  SYNCING
+}
+
+enum Urgency {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum ActionCategory {
+  META_ADS
+  CART_RECOVERY
+  WINBACK_EMAIL
+  INVENTORY_ALERT
+  PRICING
+}
+
+enum ActionStatus {
+  PENDING_APPROVAL
+  APPROVED
+  EXECUTING
+  COMPLETED
+  REJECTED
+  FAILED
+}
+
+enum ActorType {
+  AI_AGENT
+  USER
+}
+
+model User {
+  id             String       @id @default(uuid())
+  name           String
+  email          String       @unique
+  role           Role         @default(OWNER)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+}
+
+model Organization {
+  id                   String                 @id @default(uuid())
+  name                 String
+  currency             String                 @default("INR")
+  users                User[]
+  integrations         Integration[]
+  dailyMetricSnapshots DailyMetricSnapshot[]
+  aiDiagnoses          AiDiagnosis[]
+  actionQueueItems     ActionQueueItem[]
+  businessMemories     BusinessMemory[]
+  auditLogs            AuditLog[]
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+}
+
+model Integration {
+  id             String              @id @default(uuid())
+  organizationId String
+  organization   Organization        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider       IntegrationProvider
+  accessToken    String
+  refreshToken   String?
+  storeUrl       String?
+  accountId      String?
+  status         IntegrationStatus   @default(CONNECTED)
+  lastSyncedAt   DateTime            @default(now())
+  createdAt      DateTime            @default(now())
+
+  @@unique([organizationId, provider])
+}
+
+model DailyMetricSnapshot {
+  id                 String       @id @default(uuid())
+  organizationId     String
+  organization       Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  date               String       // YYYY-MM-DD
+  revenue            Float
+  ordersCount        Int
+  aov                Float
+  blendedRoas        Float
+  metaSpend          Float
+  metaRoas           Float
+  trafficVisitors    Int
+  conversionRate     Float
+  abandonedCartValue Float
+  rawMetrics         Json
+  createdAt          DateTime     @default(now())
+
+  @@unique([organizationId, date])
+}
+
+model AiDiagnosis {
+  id              String       @id @default(uuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  date            String       // YYYY-MM-DD
+  headline        String
+  summary         String
+  rootCauses      Json         // Array of root cause strings/objects
+  urgency         Urgency      @default(HIGH)
+  confidenceScore Float        @default(0.92)
+  createdAt       DateTime     @default(now())
+
+  @@index([organizationId, date])
+}
+
+model ActionQueueItem {
+  id                   String         @id @default(uuid())
+  organizationId       String
+  organization         Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title                String
+  description          String
+  category             ActionCategory
+  impactEstimateMin    Float
+  impactEstimateMax    Float
+  status               ActionStatus   @default(PENDING_APPROVAL)
+  payload              Json           // Target parameters for execution
+  executionLog         Json?
+  createdAt            DateTime       @default(now())
+  executedAt           DateTime?
+
+  @@index([organizationId, status])
+}
+
+model BusinessMemory {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  concept        String
+  insightText    String
+  sourceActionId String?
+  confidence     Float        @default(0.95)
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId])
+}
+
+model AuditLog {
+  id             String       @id @default(uuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actionName     String
+  actor          ActorType    @default(AI_AGENT)
+  actorId        String?
+  metadata       Json
+  timestamp      DateTime     @default(now())
+
+  @@index([organizationId])
+}
