@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   // 4 Consolidated Workspaces for v5.0
   const navLinks = [
-    { href: '/', label: 'Overview', icon: LayoutDashboard },
+    { href: '/overview', label: 'Overview', icon: LayoutDashboard },
     { href: '/profit', label: 'Profit & Units', icon: PieChart },
     { href: '/growth', label: 'Growth & Ads', icon: TrendingUp },
     { href: '/rules', label: 'Brain & Rules', icon: Brain },
@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
   };
 
   const isLinkActive = (href: string) => {
-    if (href === '/') return pathname === '/' || pathname === '/overview';
+    if (href === '/overview') return pathname === '/overview';
     if (href === '/profit') return pathname.startsWith('/profit') || pathname.startsWith('/analytics');
     if (href === '/growth') return pathname.startsWith('/growth') || pathname === '/meta-command' || pathname === '/recovery';
     if (href === '/rules') return pathname.startsWith('/rules') || pathname === '/memory' || pathname === '/inventory' || pathname.startsWith('/settings');
@@ -68,7 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         {/* Brand & Store Name */}
         <div className="flex items-center gap-4 sm:gap-5">
-          <Link href="/" className="flex items-center gap-2.5 group">
+          <Link href="/overview" className="flex items-center gap-2.5 group">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-bold shadow-xs group-hover:scale-105 transition-transform">
               <Sparkles className="h-4 w-4" />
             </div>
